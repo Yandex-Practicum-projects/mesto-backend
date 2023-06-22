@@ -1,12 +1,12 @@
 const User = require('../models/user');
 
 const handleError = (err, res) => {
-  if (err.name === 'ValidationError') {
-    res.status(400).send({ message: 'Переданны некорректныне данные' });
-    return;
-  }
   if (err.message === 'NotValidId') {
     res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
+    return;
+  }
+  if (err.name === 'ValidationError') {
+    res.status(400).send({ message: 'Переданны некорректныне данные' });
     return;
   }
   res.status(500).send({ message: err.message });
