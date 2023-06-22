@@ -1,12 +1,13 @@
 const Card = require('../models/card');
 
 const handleError = (err, res) => {
-  if (err.name === 'ValidationError') {
-    res.status(400).send({ message: 'Переданны некорректныне данные' });
-    return;
-  }
+  console.log(err.name);
   if (err.message === 'NotValidId') {
     res.status(404).send({ message: 'Запрашиваемая карточка не найдена' });
+    return;
+  }
+  if (err.name === 'ValidationError') {
+    res.status(400).send({ message: 'Переданны некорректныне данные' });
     return;
   }
   res.status(500).send({ message: err.message });

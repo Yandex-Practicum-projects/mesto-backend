@@ -21,6 +21,10 @@ app.use((req, res, next) => {
 app.use('/cards', require('./routes/card'));
 app.use('/users', require('./routes/user'));
 
+app.use((req, res) => {
+  res.status(404).json({ message: 'Неверный маршрут' });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.listen(PORT, () => {
   console.log(`Порт: ${PORT}`);
