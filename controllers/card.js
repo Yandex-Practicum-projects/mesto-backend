@@ -5,7 +5,7 @@ const handleError = (err, res) => {
     res.status(404).send({ message: 'Запрашиваемая карточка не найдена' });
     return;
   }
-  if (err.name === 'ValidationError') {
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
     res.status(400).send({ message: 'Переданны некорректныне данные' });
     return;
   }

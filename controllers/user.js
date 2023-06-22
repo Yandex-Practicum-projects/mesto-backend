@@ -1,11 +1,12 @@
 const User = require('../models/user');
 
+const options = { new: true, runValidators: true };
 const handleError = (err, res) => {
   if (err.message === 'NotValidId') {
     res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
     return;
   }
-  if (err.name === 'ValidationError') {
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
     res.status(400).send({ message: 'Переданны некорректныне данные' });
     return;
   }
@@ -25,14 +26,14 @@ module.exports.getUserById = (req, res) => {
 };
 module.exports.updateUserInfo = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, options)
     .orFail(new Error('NotValidId'))
     .then((user) => res.status(200).send(user))
     .catch((err) => handleError(err, res));
 };
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, options)
     .orFail(new Error('NotValidId'))
     .then((user) => res.status(200).send(user))
     .catch((err) => handleError(err, res));
