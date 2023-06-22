@@ -25,21 +25,20 @@ module.exports.getUserById = (req, res) => {
 };
 module.exports.updateUserInfo = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.params.userId, { name, about })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
     .orFail(new Error('NotValidId'))
     .then((user) => res.status(200).send(user))
     .catch((err) => handleError(err, res));
 };
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.params.userId, { avatar })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
     .orFail(new Error('NotValidId'))
     .then((user) => res.status(200).send(user))
     .catch((err) => handleError(err, res));
 };
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
-
   User.create({ name, about, avatar })
     .then((user) => res.send(user))
     .catch((err) => handleError(err, res));
