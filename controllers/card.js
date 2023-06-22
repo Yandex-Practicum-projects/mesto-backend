@@ -1,7 +1,6 @@
 const Card = require('../models/card');
 
 const handleError = (err, res) => {
-  console.log(err.name);
   if (err.message === 'NotValidId') {
     res.status(404).send({ message: 'Запрашиваемая карточка не найдена' });
     return;
