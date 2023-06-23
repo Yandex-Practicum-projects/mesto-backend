@@ -17,7 +17,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/', require('./routes/index'));
+app.use('/', require('./routes'));
 
 app.listen(PORT, () => {
   console.log(`Порт: ${PORT}`);
