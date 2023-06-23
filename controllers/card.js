@@ -3,7 +3,6 @@ const { NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR } = require('../errors/err
 const Card = require('../models/card');
 
 const handleError = (err, res) => {
-  console.log(err.name);
   if (err.message === 'NotValidId') {
     res.status(NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена' });
     return;
