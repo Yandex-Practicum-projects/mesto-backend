@@ -10,3 +10,5 @@ app.use('/users', require('./user'));
 app.use((req, res) => {
   res.status(HTTP_STATUS_CODES.NOT_FOUND).json({ message: 'Неверный маршрут' });
 });
+
+module.exports = app;
