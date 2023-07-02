@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const { errors } = require('celebrate');
+const { validateLogin, validateCreateUser } = require('./validations/user');
 const { createUser, login } = require('./controllers/user');
 const auth = require('./middlewares/auth');
 
@@ -14,13 +16,14 @@ mongoose.connect('mongodb://0.0.0.0/mestodb', {
 
 app.use(cookieParser());
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', validateLogin, login);
+app.post('/signup', validateCreateUser, createUser);
 
 app.use(auth);
 
 app.use('/', require('./routes'));
 
+app.use(errors());
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   if (err.code === 11000) {
