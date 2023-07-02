@@ -1,48 +1,63 @@
-const mongoose = require('mongoose');
-const { NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR } = require('../errors/errors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const NotFound = require('../errors/not-found');
 
 const options = { new: true, runValidators: true };
-const handleError = (err, res) => {
-  if (err.message === 'NotValidId') {
-    res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
-    return;
-  }
-  if (err instanceof mongoose.Error.ValidationError || err instanceof mongoose.Error.CastError) {
-    res.status(BAD_REQUEST).send({ message: 'Переданны некорректныне данные' });
-    return;
-  }
-  res.status(INTERNAL_SERVER_ERROR).send({ message: 'Внутренняя ошибка сервера' });
-};
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail(new Error('NotValidId'))
+    .orFail(new NotFound('Запрашиваемый пользователь не найден'))
     .then((user) => res.send(user))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.updateUserInfo = (req, res) => {
+module.exports.getUserInfo = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => res.send(user))
+    .catch(next);
+};
+module.exports.updateUserInfo = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, options)
-    .orFail(new Error('NotValidId'))
+    .orFail(new NotFound('Запрашиваемый пользователь не найден'))
     .then((user) => res.send(user))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, options)
-    .orFail(new Error('NotValidId'))
+    .orFail(new NotFound('Запрашиваемый пользователь не найден'))
     .then((user) => res.send(user))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+module.exports.createUser = (req, res, next) => {
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => User.create({
+      name: req.body.name,
+      about: req.body.about,
+      avatar: req.body.avatar,
+      email: req.body.email,
+      password: hash,
+    }))
     .then((user) => res.status(201).send(user))
-    .catch((err) => handleError(err, res));
+    .catch(next);
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      })
+        .end();
+    })
+    .catch(next);
 };

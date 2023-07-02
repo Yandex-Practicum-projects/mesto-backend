@@ -1,11 +1,11 @@
 const router = require('express').Router();
-const { NOT_FOUND } = require('../errors/errors');
+const NotFound = require('../errors/not-found');
 
 router.use('/cards', require('./card'));
 router.use('/users', require('./user'));
 
-router.use('*', (req, res) => {
-  res.status(NOT_FOUND).json({ message: 'Неверный маршрут' });
+router.use('*', () => {
+  throw new NotFound('Неверный маршрут');
 });
 
 module.exports = router;

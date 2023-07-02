@@ -1,31 +1,26 @@
-const mongoose = require('mongoose');
-const { NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR } = require('../errors/errors');
 const Card = require('../models/card');
+const NotFound = require('../errors/not-found');
+const NoAccess = require('../errors/no-access');
 
-const handleError = (err, res) => {
-  if (err.message === 'NotValidId') {
-    res.status(NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена' });
-    return;
-  }
-  if (err instanceof mongoose.Error.ValidationError || err instanceof mongoose.Error.CastError) {
-    res.status(BAD_REQUEST).send({ message: 'Переданны некорректныне данные' });
-    return;
-  }
-  res.status(INTERNAL_SERVER_ERROR).send({ message: 'Внутренняя ошибка сервера' });
-};
-
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .orFail(new Error('NotValidId'))
-    .then(() => res.send({ message: 'Карточка удалена' }))
-    .catch((err) => handleError(err, res));
+module.exports.deleteCard = (req, res, next) => {
+  Card.findById(req.params.cardId)
+    .orFail(new NotFound('Запрашиваемая карточка не найдена'))
+    .then((card) => {
+      if (card.owner.equals(req.user._id)) {
+        Card.deleteOne(card)
+          .then(() => res.send({ message: 'Карточка удалена' }));
+      } else {
+        throw new NoAccess('Нелья удалять карточки других пользователей');
+      }
+    })
+    .catch(next);
 };
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const {
     name,
     link,
@@ -41,17 +36,17 @@ module.exports.createCard = (req, res) => {
     createdAt,
   })
     .then((card) => res.status(201).send(card))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.addLike = (req, res) => {
+module.exports.addLike = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
-    .orFail(new Error('NotValidId'))
+    .orFail(new NotFound('Запрашиваемая карточка не найдена'))
     .then((card) => res.send(card))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
-module.exports.removeLike = (req, res) => {
+module.exports.removeLike = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .orFail(new Error('NotValidId'))
+    .orFail(new NotFound('Запрашиваемая карточка не найдена'))
     .then((card) => res.send(card))
-    .catch((err) => handleError(err, res));
+    .catch(next);
 };
