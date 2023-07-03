@@ -52,8 +52,13 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => {
-      res.status(201).send(user);
+    .then(() => {
+      res.status(201).send({
+        name,
+        about,
+        avatar,
+        email,
+      });
     })
     .catch(next);
 };
@@ -66,8 +71,7 @@ module.exports.login = (req, res, next) => {
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
-      })
-        .end();
+      }).send({ message: `Добротпожаловать ${user.name}` });
     })
     .catch(next);
 };
